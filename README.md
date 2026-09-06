@@ -199,12 +199,6 @@ The useful point is not to label the workaround as automatically right or wrong.
 ## Repository structure
 
 ```text
-frontend/
-  index.html
-  app.js
-  styles.css
-  config.js
-
 lambda/
   worker_strands/
     lambda_function.py
@@ -213,26 +207,19 @@ lambda/
     ARCHITECTURE_STRANDS_UPDATE.md
     AWS_DEPLOY_STEPS.md
     TEST_CASES.md
-  submit_api/
-    handler.py
-  status_api/
-    handler.py
-
-tests/
-  test_handlers.py
-
-docs/
-  AWS_CONSOLE_STEPS.md
-  FINAL_AUDIT.md
+    MINIMAL_CHANGE_AUDIT.md
 
 submission/
-  DEVPOST_ENTRY.md
-  VIDEO_SCRIPT.md
-  DEMO_SCENARIOS.md
-  SUBMISSION_CHECKLIST.md
+  DEVPOST_STRANDS_PATCH.md
+
+release/
+  SmallVoiceWorkerFunction_STRANDS_FINAL.zip
+
+LICENSE
+README.md
 ```
 
-The Strands-compatible `SmallVoiceWorkerFunction` source is published in `lambda/worker_strands/lambda_function.py`. It preserves the existing SQS, DynamoDB, status, and Web UI contracts while replacing the direct Bedrock call with an actual Strands `Agent` invocation.
+The Strands-compatible `SmallVoiceWorkerFunction` source is published in `lambda/worker_strands/lambda_function.py`. It preserves the deployed SQS, DynamoDB, status, and Web UI contracts while replacing the direct Bedrock call with an actual Strands `Agent` invocation. This repository focuses on the Strands Worker update, its deployment package, and supporting verification documentation; the public AWS deployment is available through the Live Demo link above.
 
 ---
 
@@ -277,30 +264,9 @@ When processing is complete, the response can include:
 
 ---
 
-## Local verification
+## Verification documentation
 
-Run the dependency-free handler tests:
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-Current package result:
-
-```text
-Ran 3 tests
-OK
-```
-
-Serve the frontend locally:
-
-```bash
-python3 -m http.server 8080 -d frontend
-```
-
-Set the deployed API Gateway base URL in `frontend/config.js` before testing the local UI.
-
-**Never place AWS credentials or secrets in frontend code.**
+The repository includes deployment instructions, test cases, a minimal-change audit, and the exact Lambda ZIP used for the Strands Worker update. Runtime behavior can be checked through the public Live Demo. Use synthetic or consented examples only, and never place AWS credentials or secrets in client-side code.
 
 ---
 
