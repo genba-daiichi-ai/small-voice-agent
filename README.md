@@ -6,7 +6,7 @@
 
 Small Voice Agent is a human-centered AWS application for the kinds of workplace friction that are often too small to become a formal report: an awkward reach repeated all day, different ways of teaching the same task, or a temporary workaround that keeps the job moving but is rarely recorded.
 
-The system accepts a short concern in ordinary language, processes it asynchronously with Amazon Bedrock, stores the result and processing evidence in DynamoDB, and returns a clear completion state to the user. The output is explicitly presented for **human review**, not as an autonomous workplace decision.
+The system accepts a short concern in ordinary language, processes it asynchronously with a **Strands Agents SDK** Agent backed by Amazon Bedrock / Amazon Nova Lite, stores the result and processing evidence in DynamoDB, and returns a clear completion state to the user. The output is explicitly presented for **human review**, not as an autonomous workplace decision.
 
 ---
 
@@ -34,7 +34,7 @@ Small Voice Agent is designed to make that first small voice easier to capture, 
 2. The frontend sends the report through **Amazon API Gateway**.
 3. `SmallVoiceSubmitFunction` validates the input, creates a report record, and sends a message to **Amazon SQS**.
 4. SQS invokes `SmallVoiceWorkerFunction` asynchronously.
-5. The worker calls **Amazon Bedrock / Amazon Nova Lite** to structure the concern into a practical proposal.
+5. The worker creates a **Strands Agents SDK** `Agent` with `BedrockModel` and invokes **Amazon Bedrock / Amazon Nova Lite** to structure the concern into a practical proposal.
 6. The result, model identifier, timestamps, and processing state are stored in **Amazon DynamoDB**.
 7. The web UI polls `SmallVoiceStatusFunction` until the durable record reaches `DONE` or `FAILED`.
 8. The result is shown with **Human review required** so the final judgment stays with a person.
@@ -52,7 +52,7 @@ flowchart LR
     SUB --> DDB[(DynamoDB\nSmallVoiceReports)]
     SUB --> SQS[Amazon SQS\nSmallVoiceAgentQueue]
 
-    SQS --> WORKER[SmallVoiceWorkerFunction]
+    SQS --> WORKER[SmallVoiceWorkerFunction\nStrands Agents SDK]
     WORKER --> BEDROCK[Amazon Bedrock\nAmazon Nova Lite]
     WORKER --> DDB
 
@@ -75,6 +75,7 @@ flowchart LR
 | Amazon SQS | Asynchronous work queue |
 | Amazon Bedrock | Foundation-model processing |
 | Amazon Nova Lite | Model used by the verified live run |
+| Strands Agents SDK | Agent framework used inside the Worker Lambda |
 | Amazon DynamoDB | Durable report, result, and status storage |
 | Amazon CloudWatch | Runtime logs and processing evidence |
 
@@ -205,6 +206,13 @@ frontend/
   config.js
 
 lambda/
+  worker_strands/
+    lambda_function.py
+    requirements.txt
+    README_STRANDS_UPDATE.md
+    ARCHITECTURE_STRANDS_UPDATE.md
+    AWS_DEPLOY_STEPS.md
+    TEST_CASES.md
   submit_api/
     handler.py
   status_api/
@@ -224,7 +232,7 @@ submission/
   SUBMISSION_CHECKLIST.md
 ```
 
-The verified `SmallVoiceWorkerFunction` is intentionally not duplicated in this presentation-layer package. The repository preserves the working worker pipeline rather than overwriting a known-good AWS function during final submission preparation.
+The Strands-compatible `SmallVoiceWorkerFunction` source is published in `lambda/worker_strands/lambda_function.py`. It preserves the existing SQS, DynamoDB, status, and Web UI contracts while replacing the direct Bedrock call with an actual Strands `Agent` invocation.
 
 ---
 
